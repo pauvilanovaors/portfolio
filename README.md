@@ -18,6 +18,9 @@ All text content lives in **`src/data/profile.ts`** — a single typed source of
 Edit that file to update experience, projects, skills, education or certifications;
 components render from it automatically.
 
+Project photos live in **`public/images/`** (optimized WebP) and are referenced from
+`src/data/profile.ts` via each project's `gallery` field.
+
 ## Develop
 
 ```bash
@@ -45,6 +48,6 @@ npm run preview      # serve the production build locally
 - Semantic landmarks, skip link, labelled sections, visible focus states
 - Full `prefers-reduced-motion` support (smooth scroll, reveals and ambient
   animation are all disabled)
-- No images or heavy assets — visuals are code-drawn (CSS/SVG)
+- Photos are optimized WebP, lazy-loaded; everything else is code-drawn (CSS/SVG)
 - Fonts: Space Grotesk + IBM Plex Mono with `display=swap`
 - SEO meta, Open Graph and JSON-LD `Person` structured data in `index.html`

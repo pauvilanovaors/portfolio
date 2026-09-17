@@ -98,6 +98,12 @@ export interface RepoLink {
   url: string
 }
 
+export interface GalleryImage {
+  src: string
+  alt: string
+  caption: string
+}
+
 export interface Project {
   index: string
   title: string
@@ -106,6 +112,7 @@ export interface Project {
   stack: string[]
   links: RepoLink[]
   featured?: boolean
+  gallery?: GalleryImage[]
 }
 
 const gh = identity.github
@@ -126,6 +133,48 @@ export const projects: Project[] = [
       { name: 'Video_DEMO', url: `${gh}/Video_DEMO` },
     ],
     featured: true,
+    gallery: [
+      {
+        src: '/images/transporter/transporter-01.webp',
+        alt: 'Top view of the robot chassis bay: STM32 Nucleo board on a custom copper PCB, stepper drivers, battery and wiring.',
+        caption: 'Chassis bay — MCU, drivers, battery',
+      },
+      {
+        src: '/images/transporter/transporter-02.webp',
+        alt: 'Close-up of the custom control board with the STM32 Nucleo, stepper drivers and red emergency-stop button.',
+        caption: 'Control board & E-stop',
+      },
+      {
+        src: '/images/transporter/transporter-03.webp',
+        alt: 'First wooden prototype of the scissor-lift stage with a stepper motor and lead screw, on a workbench.',
+        caption: 'First lift prototype',
+      },
+      {
+        src: '/images/transporter/transporter-04.webp',
+        alt: 'Detail of the lift drive: NEMA stepper motor, 3D-printed gear reduction and lead screw with bearing blocks.',
+        caption: 'Lead-screw lift drive',
+      },
+      {
+        src: '/images/transporter/transporter-05.webp',
+        alt: 'Painted black chassis with scissor lift and mecanum wheels during workshop assembly.',
+        caption: 'Painted chassis, workshop fit-out',
+      },
+      {
+        src: '/images/transporter/transporter-06.webp',
+        alt: 'Finished autonomous transporter robot, side view: black base on mecanum wheels with the lift raised.',
+        caption: 'Final assembly',
+      },
+      {
+        src: '/images/transporter/transporter-07.webp',
+        alt: 'Finished robot from the front with the lifting platform fully raised.',
+        caption: 'Platform raised — front',
+      },
+      {
+        src: '/images/transporter/transporter-08.webp',
+        alt: 'Three-quarter view of the finished robot with the lift raised and the control board mounted on the platform.',
+        caption: 'Full lift, mecanum base',
+      },
+    ],
   },
   {
     index: 'P—02',
