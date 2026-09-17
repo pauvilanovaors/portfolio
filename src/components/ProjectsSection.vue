@@ -1,5 +1,68 @@
 <script setup lang="ts">
-import { identity, projects } from '../data/profile'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { identity, projects, type GalleryImage } from '../data/profile'
+
+interface LightboxState {
+  images: GalleryImage[]
+  index: number
+}
+
+const lightbox = ref<LightboxState | null>(null)
+const closeButton = ref<HTMLButtonElement | null>(null)
+let lastTrigger: HTMLElement | null = null
+
+const currentImage = computed<GalleryImage | null>(() =>
+  lightbox.value ? lightbox.value.images[lightbox.value.index] : null,
+)
+
+const pad = (n: number) => String(n).padStart(2, '0')
+
+function openLightbox(images: GalleryImage[], index: number, event: MouseEvent) {
+  lastTrigger = event.currentTarget instanceof HTMLElement ? event.currentTarget : null
+  lightbox.value = { images, index }
+}
+
+function closeLightbox() {
+  lightbox.value = null
+}
+
+function stepLightbox(direction: 1 | -1) {
+  if (!lightbox.value) return
+  const total = lightbox.value.images.length
+  lightbox.value.index = (lightbox.value.index + direction + total) % total
+}
+
+function onKeydown(event: KeyboardEvent) {
+  if (!lightbox.value) return
+  if (event.key === 'Escape') {
+    event.preventDefault()
+    closeLightbox()
+  } else if (event.key === 'ArrowRight') {
+    event.preventDefault()
+    stepLightbox(1)
+  } else if (event.key === 'ArrowLeft') {
+    event.preventDefault()
+    stepLightbox(-1)
+  }
+}
+
+watch(lightbox, async (state) => {
+  document.documentElement.style.overflow = state ? 'hidden' : ''
+  if (state) {
+    window.addEventListener('keydown', onKeydown)
+    await nextTick()
+    closeButton.value?.focus()
+  } else {
+    window.removeEventListener('keydown', onKeydown)
+    lastTrigger?.focus()
+    lastTrigger = null
+  }
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeydown)
+  document.documentElement.style.overflow = ''
+})
 </script>
 
 <template>
@@ -45,6 +108,27 @@ import { identity, projects } from '../data/profile'
               </a>
             </li>
           </ul>
+
+          <div v-if="project.gallery?.length" class="project-gallery">
+            <p class="mono gallery-label">
+              Build log — {{ pad(project.gallery.length) }} photos · click to enlarge
+            </p>
+            <div class="gallery-grid" role="list">
+              <button
+                v-for="(image, gi) in project.gallery"
+                :key="image.src"
+                type="button"
+                class="gallery-item"
+                role="listitem"
+                :aria-label="`Enlarge photo ${gi + 1} of ${project.gallery.length}: ${image.caption}`"
+                @click="openLightbox(project.gallery!, gi, $event)"
+              >
+                <img :src="image.src" :alt="image.alt" loading="lazy" decoding="async" />
+                <span class="gallery-tag mono" aria-hidden="true">FIG.{{ pad(gi + 1) }}</span>
+                <span class="gallery-caption mono" aria-hidden="true">{{ image.caption }}</span>
+              </button>
+            </div>
+          </div>
         </article>
       </div>
 
@@ -57,6 +141,59 @@ import { identity, projects } from '../data/profile'
         </a>
       </div>
     </div>
+
+    <Teleport to="body">
+      <Transition name="lb">
+        <div
+          v-if="lightbox && currentImage"
+          class="lightbox"
+          role="dialog"
+          aria-modal="true"
+          :aria-label="`Photo ${lightbox.index + 1} of ${lightbox.images.length}: ${currentImage.caption}`"
+          @click.self="closeLightbox"
+        >
+          <button
+            ref="closeButton"
+            type="button"
+            class="lb-close mono"
+            aria-label="Close photo viewer"
+            @click="closeLightbox"
+          >
+            ESC ✕
+          </button>
+
+          <button
+            type="button"
+            class="lb-nav lb-nav--prev"
+            aria-label="Previous photo"
+            @click="stepLightbox(-1)"
+          >
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+              <path d="M14 3L6 11L14 19" stroke="currentColor" stroke-width="1.4" />
+            </svg>
+          </button>
+
+          <figure class="lb-figure">
+            <img :src="currentImage.src" :alt="currentImage.alt" />
+            <figcaption class="lb-caption mono">
+              <span>FIG.{{ pad(lightbox.index + 1) }} — {{ currentImage.caption }}</span>
+              <span>{{ pad(lightbox.index + 1) }} / {{ pad(lightbox.images.length) }}</span>
+            </figcaption>
+          </figure>
+
+          <button
+            type="button"
+            class="lb-nav lb-nav--next"
+            aria-label="Next photo"
+            @click="stepLightbox(1)"
+          >
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+              <path d="M8 3L16 11L8 19" stroke="currentColor" stroke-width="1.4" />
+            </svg>
+          </button>
+        </div>
+      </Transition>
+    </Teleport>
   </section>
 </template>
 
@@ -162,6 +299,198 @@ import { identity, projects } from '../data/profile'
   color: var(--text);
 }
 
+/* ---- Gallery ---- */
+
+.project-gallery {
+  grid-column: 1 / -1;
+  margin-top: 0.6rem;
+  padding-top: 1.8rem;
+  border-top: 1px solid var(--line);
+}
+
+.gallery-label {
+  color: var(--faint);
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+
+.gallery-item {
+  position: relative;
+  display: block;
+  padding: 0;
+  border: 0;
+  background: var(--bg);
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  cursor: zoom-in;
+  text-align: left;
+}
+
+.gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: saturate(0.92);
+  transition: transform 0.7s var(--ease), filter 0.7s var(--ease);
+}
+
+.gallery-item:hover img,
+.gallery-item:focus-visible img {
+  transform: scale(1.045);
+  filter: saturate(1);
+}
+
+.gallery-tag {
+  position: absolute;
+  top: 0.6rem;
+  left: 0.6rem;
+  padding: 0.22rem 0.45rem;
+  background: rgba(22, 21, 17, 0.78);
+  color: var(--accent);
+  font-size: 0.5625rem;
+  letter-spacing: 0.12em;
+  pointer-events: none;
+}
+
+.gallery-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0.5rem 0.6rem;
+  background: rgba(22, 21, 17, 0.82);
+  color: var(--dim);
+  font-size: 0.5625rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+/* ---- Lightbox ---- */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(22, 21, 17, 0.94);
+  backdrop-filter: blur(6px);
+  overscroll-behavior: contain;
+}
+
+.lb-figure {
+  margin: 0;
+  max-width: min(92vw, 1100px);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.lb-figure img {
+  max-width: 100%;
+  max-height: 76vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  margin: 0 auto;
+  border: 1px solid var(--line);
+  background: #0c0b09;
+}
+
+.lb-caption {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  padding-top: 1rem;
+  color: var(--dim);
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.lb-close {
+  position: fixed;
+  top: 1.4rem;
+  right: 1.6rem;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--dim);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+  transition: color 0.25s ease, border-color 0.25s ease;
+}
+
+.lb-close:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.lb-nav {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: clamp(56px, 12vw, 140px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: var(--ghost);
+  cursor: pointer;
+  transition: color 0.25s ease;
+}
+
+.lb-nav:hover {
+  color: var(--accent);
+}
+
+.lb-nav--prev {
+  left: 0;
+}
+
+.lb-nav--next {
+  right: 0;
+}
+
+.lb-enter-active,
+.lb-leave-active {
+  transition: opacity 0.35s var(--ease);
+}
+
+.lb-enter-active .lb-figure,
+.lb-leave-active .lb-figure {
+  transition: transform 0.35s var(--ease), opacity 0.35s var(--ease);
+}
+
+.lb-enter-from,
+.lb-leave-to {
+  opacity: 0;
+}
+
+.lb-enter-from .lb-figure,
+.lb-leave-to .lb-figure {
+  transform: translateY(14px);
+  opacity: 0;
+}
+
 .more {
   margin-top: 2.5rem;
   text-align: right;
@@ -179,6 +508,17 @@ import { identity, projects } from '../data/profile'
 
   .project--featured {
     display: flex;
+  }
+}
+
+@media (max-width: 640px) {
+  .gallery-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lb-caption {
+    flex-direction: column;
+    gap: 0.4rem;
   }
 }
 </style>
