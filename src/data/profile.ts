@@ -112,6 +112,8 @@ export interface Project {
   stack: string[]
   links: RepoLink[]
   featured?: boolean
+  wide?: boolean
+  diagram?: boolean
   gallery?: GalleryImage[]
 }
 
@@ -135,42 +137,42 @@ export const projects: Project[] = [
     featured: true,
     gallery: [
       {
-        src: '/images/transporter/transporter-01.jpg',
+        src: '/images/transporter/transporter-01.webp',
         alt: 'Top view of the robot chassis bay: STM32 Nucleo board on a custom copper PCB, stepper drivers, battery and wiring.',
         caption: 'Chassis bay — MCU, drivers, battery',
       },
       {
-        src: '/images/transporter/transporter-02.jpg',
+        src: '/images/transporter/transporter-02.webp',
         alt: 'Close-up of the custom control board with the STM32 Nucleo, stepper drivers and red emergency-stop button.',
         caption: 'Control board & E-stop',
       },
       {
-        src: '/images/transporter/transporter-03.jpg',
+        src: '/images/transporter/transporter-03.webp',
         alt: 'First wooden prototype of the scissor-lift stage with a stepper motor and lead screw, on a workbench.',
         caption: 'First lift prototype',
       },
       {
-        src: '/images/transporter/transporter-04.jpg',
+        src: '/images/transporter/transporter-04.webp',
         alt: 'Detail of the lift drive: NEMA stepper motor, 3D-printed gear reduction and lead screw with bearing blocks.',
         caption: 'Lead-screw lift drive',
       },
       {
-        src: '/images/transporter/transporter-05.jpg',
+        src: '/images/transporter/transporter-05.webp',
         alt: 'Painted black chassis with scissor lift and mecanum wheels during workshop assembly.',
         caption: 'Painted chassis, workshop fit-out',
       },
       {
-        src: '/images/transporter/transporter-06.jpg',
+        src: '/images/transporter/transporter-06.webp',
         alt: 'Finished autonomous transporter robot, side view: black base on mecanum wheels with the lift raised.',
         caption: 'Final assembly',
       },
       {
-        src: '/images/transporter/transporter-07.jpg',
+        src: '/images/transporter/transporter-07.webp',
         alt: 'Finished robot from the front with the lifting platform fully raised.',
         caption: 'Platform raised — front',
       },
       {
-        src: '/images/transporter/transporter-08.jpg',
+        src: '/images/transporter/transporter-08.webp',
         alt: 'Three-quarter view of the finished robot with the lift raised and the control board mounted on the platform.',
         caption: 'Full lift, mecanum base',
       },
@@ -178,6 +180,39 @@ export const projects: Project[] = [
   },
   {
     index: 'P—02',
+    title: 'Silk Road — Smart Pantry',
+    tag: 'Team project · UPC — IoT · vision · mobile',
+    description:
+      'A pantry that recognises what you store, the moment you store it: hold a product in front of the camera and the inventory on your phone updates itself. A time-of-flight sensor triggers an STM32 Nucleo, which wakes a Raspberry Pi over UART; the Pi captures a 20-frame burst, a retrained ResNet-50 network identifies the product with 90% frame consensus, and contour analysis decides whether it went in or out. Stock syncs across a local MariaDB and a cloud MySQL database, and an Android app — live inventory and shopping list — reads it through a Flask JSON API. Electronics, firmware, computer vision, databases and app, designed and tested end to end by a team of nine electronic engineering students.',
+    stack: ['C · STM32', 'Raspberry Pi · Python', 'UART', 'ResNet-50 · MATLAB', 'MariaDB · MySQL', 'Android · Flask'],
+    links: [],
+    wide: true,
+    diagram: true,
+    gallery: [
+      {
+        src: '/images/silkroad/silkroad-01.webp',
+        alt: 'Render of the pantry sensor and camera module mounted inside the cabinet.',
+        caption: 'Sensor & camera module',
+      },
+      {
+        src: '/images/silkroad/silkroad-02.webp',
+        alt: 'Hand-soldered interface circuit with relay, voltage divider and filtering for the limit-switch interrupt.',
+        caption: 'Custom interface circuit',
+      },
+      {
+        src: '/images/silkroad/silkroad-03.webp',
+        alt: 'Top-down camera capture inside the pantry, used for contour detection of stored products.',
+        caption: 'Top-down vision input',
+      },
+      {
+        src: '/images/silkroad/silkroad-04.webp',
+        alt: 'Android app screen listing the pantry products with their quantities.',
+        caption: 'Android app — live inventory',
+      },
+    ],
+  },
+  {
+    index: 'P—03',
     title: 'TUM Embedded Systems',
     tag: 'Coursework — low-level C',
     description:
@@ -186,7 +221,7 @@ export const projects: Project[] = [
     links: [{ name: 'TUM_EmbeddedSystems', url: `${gh}/TUM_EmbeddedSystems` }],
   },
   {
-    index: 'P—03',
+    index: 'P—04',
     title: 'This Website',
     tag: 'Web — designed & built from scratch',
     description:

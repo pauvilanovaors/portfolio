@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { identity, projects, type GalleryImage } from '../data/profile'
+import SystemDiagram from './SystemDiagram.vue'
 
 interface LightboxState {
   images: GalleryImage[]
@@ -83,7 +84,7 @@ onBeforeUnmount(() => {
           v-for="(project, i) in projects"
           :key="project.index"
           class="project"
-          :class="{ 'project--featured': project.featured }"
+          :class="{ 'project--featured': project.featured, 'project--wide': project.wide }"
           v-reveal="i * 80"
         >
           <div class="project-head">
@@ -98,7 +99,7 @@ onBeforeUnmount(() => {
             <li v-for="tech in project.stack" :key="tech" class="mono">{{ tech }}</li>
           </ul>
 
-          <ul class="project-links" aria-label="Repositories">
+          <ul v-if="project.links.length" class="project-links" aria-label="Repositories">
             <li v-for="link in project.links" :key="link.name">
               <a class="u-link mono" :href="link.url" target="_blank" rel="noopener noreferrer">
                 {{ link.name }}
@@ -108,6 +109,8 @@ onBeforeUnmount(() => {
               </a>
             </li>
           </ul>
+
+          <SystemDiagram v-if="project.diagram" class="project-diagram" />
 
           <div v-if="project.gallery?.length" class="project-gallery">
             <p class="mono gallery-label">
@@ -236,6 +239,34 @@ onBeforeUnmount(() => {
 .project--featured .project-stack,
 .project--featured .project-links {
   grid-column: 2;
+}
+
+/* Wide project: text column + architecture diagram column */
+.project--wide {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  column-gap: clamp(2rem, 5vw, 5rem);
+  align-content: start;
+}
+
+.project--wide .project-head,
+.project--wide .project-title,
+.project--wide .project-desc,
+.project--wide .project-stack,
+.project--wide .project-links {
+  grid-column: 1;
+}
+
+.project--wide .project-diagram {
+  grid-column: 2;
+  grid-row: 1 / span 5;
+  align-self: center;
+  margin: 0;
+}
+
+.project--wide .project-gallery {
+  grid-column: 1 / -1;
 }
 
 .project-head {
@@ -506,7 +537,8 @@ onBeforeUnmount(() => {
     grid-template-columns: 1fr;
   }
 
-  .project--featured {
+  .project--featured,
+  .project--wide {
     display: flex;
   }
 }
